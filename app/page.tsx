@@ -1,103 +1,128 @@
-import Image from "next/image";
+"use client";
+
+import { Box, Lock, Search, Settings, Sparkles } from "lucide-react";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import React from "react";
+import { BackgroundBeams } from "@/components/ui/background-beams";
+import { Cover } from "@/components/ui/cover";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className=" w-full rounded-md bg-neutral-950 relative my-30 antialiased">
+      <div className="lg:pl-25 lg:py-15 flex flex-col md:flex-row justify-between items-center w-full max-w-7xl mx-auto px-4 gap-20">
+        {/* Left: Heading Text */}
+        <div className=" text-left w-full md:w-1/2">
+          <h1 className="font-montserrat font-bold text-4xl md:text-4xl lg:text-6xl max-w-7xl mx-auto text-left relative z-20 bg-clip-text text-transparent bg-gradient-to-b from-neutral-800 via-neutral-700 to-neutral-700 dark:from-neutral-800 dark:via-white dark:to-white">
+            Build Your Business Invoice <br /> at <Cover>speed of light</Cover>
+          </h1>
+          <p className="text-neutral-400 text-lg">
+            Illuminate. Automate. Dominate.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Right: Torch Graphic */}
+        <div className="relative flex flex-col items-center w-full md:w-1/2">
+          {/* Flame Glow */}
+          <div className="relative z-10">
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-20 h-20 bg-orange-400/30 blur-3xl rounded-full z-0" />
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-12 h-12 bg-yellow-300/30 blur-2xl rounded-full z-0" />
+
+            {/* Actual Flame */}
+            <div className="w-8 h-12 bg-gradient-to-t from-yellow-400 via-orange-500 to-transparent rounded-b-full z-10 shadow-[0_0_40px_10px_rgba(253,224,71,0.4)]" />
+          </div>
+
+          {/* Torch Body */}
+          <div className="w-2 h-24 bg-neutral-700 rounded-sm shadow-inner z-10" />
+
+          {/* Torch Base / Holder */}
+          <div className="w-8 h-2 bg-neutral-900 rounded-b-md mt-1 shadow-md" />
+        </div>
+      </div>
+
+      {/* <BackgroundBeams /> */}
+
+      {/* Grid */}
+      <div className="mt-30 mx-[15%] items-center justify-center">
+        <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
+          <GridItem
+            area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
+            icon={<Box className="h-4 w-4 text-black dark:text-neutral-400" />}
+            title="For solo founders & freelancers"
+            description="Generate invoices that don't look like your tax nightmares."
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+
+          <GridItem
+            area="md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]"
+            icon={
+              <Settings className="h-4 w-4 text-black dark:text-neutral-400" />
+            }
+            title="Speed + Simplicity"
+            description="No sign-up, no fluff, just done."
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+
+          <GridItem
+            area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
+            icon={<Lock className="h-4 w-4 text-black dark:text-neutral-400" />}
+            title="Customization, We Got You!"
+            description="Make it yours. Add your logo, tweak layout, look pro AF."
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          <GridItem
+            area="md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]"
+            icon={
+              <Sparkles className="h-4 w-4 text-black dark:text-neutral-400" />
+            }
+            title="For agencies and teams"
+            description="Manage all invoices from one clean dashboard."
+          />
+
+          <GridItem
+            area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
+            icon={
+              <Search className="h-4 w-4 text-black dark:text-neutral-400" />
+            }
+            title="Export and share"
+            description="Professional invoices, wherever you are."
+          />
+        </ul>
+      </div>
     </div>
   );
 }
+interface GridItemProps {
+  area: string;
+  icon: React.ReactNode;
+  title: string;
+  description: React.ReactNode;
+}
+
+const GridItem = ({ area, icon, title, description }: GridItemProps) => {
+  return (
+    <li className={`min-h-[14rem] list-none ${area}`}>
+      <div className="relative h-full rounded-2xl border p-2 md:rounded-3xl md:p-3">
+        <GlowingEffect
+          spread={40}
+          glow={true}
+          disabled={false}
+          proximity={64}
+          inactiveZone={0.01}
+        />
+        <div className="border-0.75 relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-6 md:p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D]">
+          <div className="relative flex flex-1 flex-col justify-between gap-3">
+            <div className="w-fit rounded-lg border border-gray-600 p-2">
+              {icon}
+            </div>
+            <div className="space-y-3">
+              <h3 className="-tracking-4 pt-0.5 font-sans text-xl/[1.375rem] font-semibold text-balance text-black md:text-2xl/[1.875rem] dark:text-white">
+                {title}
+              </h3>
+              <h2 className="font-sans text-sm/[1.125rem] text-black md:text-base/[1.375rem] dark:text-neutral-400 [&_b]:md:font-semibold [&_strong]:md:font-semibold">
+                {description}
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+};
