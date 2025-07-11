@@ -7,7 +7,6 @@ import {
   Document,
   StyleSheet,
   Image,
-  Font,
 } from "@react-pdf/renderer";
 
 interface InvoiceItem {

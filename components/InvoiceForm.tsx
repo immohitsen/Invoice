@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { X, Download, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
 import InvoicePDF from "./ui/InvoicePDF";
 
@@ -26,7 +25,6 @@ const base64ToFile = (base64: string, filename: string): File => {
 };
 
 export default function InvoiceForm() {
-  const router = useRouter();
 
   // Initialize all states with empty/default values
   const [logo, setLogo] = useState<File | null>(null);
@@ -392,7 +390,7 @@ export default function InvoiceForm() {
             {/* Line Items */}
             <div className="space-y-2">
               <label className="text-sm text-neutral-400">Items</label>
-              {items.map((it, i) => (
+              {items.map((it) => (
                 <div key={it.id} className="flex gap-2 items-start">
                   <input
                     type="text"

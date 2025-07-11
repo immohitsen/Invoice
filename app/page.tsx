@@ -3,7 +3,6 @@
 import { Box, Lock, Search, Settings, Sparkles } from "lucide-react";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import React from "react";
-import { BackgroundBeams } from "@/components/ui/background-beams";
 import { Cover } from "@/components/ui/cover";
 
 export default function Home() {
