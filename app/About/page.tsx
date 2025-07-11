@@ -27,7 +27,7 @@ export default function AboutPage() {
             />
             <h1 className="text-3xl font-bold text-white">Mohit Sen</h1>
             <p className="text-neutral-400 text-center max-w-md">
-              Hi! I'm Mohit, a passionate web developer focused on building
+              Hi! I&apos;m Mohit, a passionate web developer focused on building
               elegant, user-friendly web apps. I love working with React,
               Next.js, and modern UI/UX tools. Always learning, always building.
             </p>

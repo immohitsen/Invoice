@@ -428,7 +428,7 @@ export default function InvoiceForm() {
             {/* Line Items */}
             <div className="space-y-2">
               <label className="text-sm text-neutral-400">Items</label>
-              {items.map((it, i) => (
+              {items.map((it) => (
                 <div key={it.id} className="flex flex-col sm:flex-row gap-2 items-start">
                   <input
                     type="text"
