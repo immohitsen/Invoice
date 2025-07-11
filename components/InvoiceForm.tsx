@@ -1,7 +1,9 @@
-// components/InvoiceForm.tsx
 "use client";
-import React, { useState } from "react";
-import { X, Download } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Download, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { pdf } from "@react-pdf/renderer";
+import InvoicePDF from "./ui/InvoicePDF";
 
 type LineItem = {
   id: number;
@@ -10,33 +12,38 @@ type LineItem = {
   rate: number;
 };
 
+// Helper function to convert base64 to File
+const base64ToFile = (base64: string, filename: string): File => {
+  const arr = base64.split(",");
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+
 export default function InvoiceForm() {
-  // Logo & Invoice #
+  const router = useRouter();
+
+  // Initialize all states with empty/default values
   const [logo, setLogo] = useState<File | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("1");
-
-  // Dates & Terms
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [paymentTerms, setPaymentTerms] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [poNumber, setPoNumber] = useState("");
-
-  // Parties
   const [fromName, setFromName] = useState("");
   const [fromAddress, setFromAddress] = useState("");
   const [toName, setToName] = useState("");
   const [toAddress, setToAddress] = useState("");
-
-  // Line items
   const [items, setItems] = useState<LineItem[]>([
     { id: Date.now(), description: "", qty: 0, rate: 0 },
   ]);
-
-  // Notes & Terms
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
-
-  // Financials
   const [taxType, setTaxType] = useState<"percent" | "amount">("percent");
   const [taxPercent, setTaxPercent] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
@@ -45,11 +52,163 @@ export default function InvoiceForm() {
   const [amountPaid, setAmountPaid] = useState(0);
   const [currency, setCurrency] = useState("INR");
 
+  // Load saved data on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem("invoiceDraft");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+
+        // Set form fields
+        setFromName(parsedData.fromName || "");
+        setFromAddress(parsedData.fromAddress || "");
+        setToName(parsedData.toName || "");
+        setToAddress(parsedData.toAddress || "");
+        setInvoiceNumber(parsedData.invoiceNumber || "1");
+        setDate(parsedData.date || new Date().toISOString().slice(0, 10));
+        setPaymentTerms(parsedData.paymentTerms || "");
+        setDueDate(parsedData.dueDate || "");
+        setPoNumber(parsedData.poNumber || "");
+        setItems(
+          parsedData.items || [
+            { id: Date.now(), description: "", qty: 0, rate: 0 },
+          ]
+        );
+        setNotes(parsedData.notes || "");
+        setTerms(parsedData.terms || "");
+        setTaxType(parsedData.taxType || "percent");
+        setTaxPercent(parsedData.taxPercent || 0);
+        setTaxAmount(parsedData.taxAmount || 0);
+        setDiscount(parsedData.discount || 0);
+        setShippingFee(parsedData.shippingFee || 0);
+        setAmountPaid(parsedData.amountPaid || 0);
+        setCurrency(parsedData.currency || "INR");
+
+        // Set logo if exists
+        if (parsedData.logoBase64) {
+          const file = base64ToFile(parsedData.logoBase64, "logo");
+          setLogo(file);
+        }
+      } catch (error) {
+        console.error("Failed to parse saved data:", error);
+      }
+    }
+  }, []);
+
+  // Save form data to localStorage with debounce
+  useEffect(() => {
+    const saveDraft = async () => {
+      let logoBase64 = null;
+
+      if (logo) {
+        logoBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(logo);
+        });
+      }
+
+      const formData = {
+        fromName,
+        fromAddress,
+        toName,
+        toAddress,
+        invoiceNumber,
+        date,
+        paymentTerms,
+        dueDate,
+        poNumber,
+        items,
+        notes,
+        terms,
+        taxType,
+        taxPercent,
+        taxAmount,
+        discount,
+        shippingFee,
+        amountPaid,
+        currency,
+        logoBase64,
+      };
+
+      localStorage.setItem("invoiceDraft", JSON.stringify(formData));
+    };
+
+    const timer = setTimeout(() => {
+      saveDraft();
+    }, 1000); // Debounce saving to 1 second
+
+    return () => clearTimeout(timer);
+  }, [
+    fromName,
+    fromAddress,
+    toName,
+    toAddress,
+    invoiceNumber,
+    date,
+    paymentTerms,
+    dueDate,
+    poNumber,
+    items,
+    notes,
+    terms,
+    taxType,
+    taxPercent,
+    taxAmount,
+    discount,
+    shippingFee,
+    amountPaid,
+    currency,
+    logo,
+  ]);
+
+  const handleDownloadClick = async () => {
+    // 1️⃣ Convert logo to base64 if present
+    let logoBase64: string | null = null;
+    if (logo) {
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(logo);
+        reader.onload = () => resolve(reader.result as string);
+      });
+    }
+
+    // 2️⃣ Assemble invoice data
+    const invoiceData = {
+      fromName,
+      fromAddress,
+      toName,
+      toAddress,
+      invoiceNumber,
+      date,
+      dueDate,
+      items,
+      subtotal,
+      taxValue,
+      discountAmt,
+      shippingFee,
+      total,
+      amountPaid,
+      balanceDue,
+      currency,
+      logo: logoBase64 || undefined,
+      notes,
+      // terms is not used in InvoicePDF, so not passing it
+    };
+
+    // 3️⃣ Generate PDF and open in new tab
+    const blob = await pdf(<InvoicePDF data={invoiceData} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   // Helpers
   const addLine = () =>
     setItems([...items, { id: Date.now(), description: "", qty: 0, rate: 0 }]);
+
   const deleteLine = (id: number) =>
     setItems(items.filter((it) => it.id !== id));
+
   const updateItem = (id: number, field: keyof LineItem, val: string) =>
     setItems((its) =>
       its.map((it) =>
@@ -67,6 +226,34 @@ export default function InvoiceForm() {
   const total = subtotal + taxValue + shippingFee - discountAmt;
   const balanceDue = total - amountPaid;
 
+  // Clear saved draft
+  const clearDraft = () => {
+    localStorage.removeItem("invoiceDraft");
+    alert("Saved draft has been cleared!");
+    setLogo(null);
+    setInvoiceNumber("");
+    setDate("");
+    setPaymentTerms("");
+    setDueDate("");
+    setPoNumber("");
+    setFromName("");
+    setFromAddress("");
+    setToName("");
+    setToAddress("");
+    setItems([
+      { id: Date.now(), description: "", qty: 0, rate: 0 },
+    ]);
+    setNotes("");
+    setTerms("");
+    setTaxType("percent");
+    setTaxPercent(0);
+    setTaxAmount(0);
+    setDiscount(0);
+    setShippingFee(0);
+    setAmountPaid(0);
+    setCurrency("INR");
+  };
+
   return (
     <div className="font-montserrat min-h-screen bg-neutral-950 p-6">
       <div className="max-w-6xl mx-auto bg-neutral-900 rounded-2xl overflow-hidden shadow-lg">
@@ -75,14 +262,28 @@ export default function InvoiceForm() {
           <div className="p-8 space-y-6">
             {/* Logo & Invoice# */}
             <div className="flex justify-between items-center">
-              <label className="flex items-center gap-2">
-                <div className="cursor-pointer h-48 w-48 bg-neutral-800 rounded-lg flex items-center justify-center overflow-hidden border border-gray-500 border-dashed">
+              <label className="cursor-pointer contain-inline-size items-center gap-2 relative">
+                <div className="h-48 w-48 bg-neutral-800 rounded-lg flex items-center justify-center overflow-hidden border border-gray-500 border-dashed">
                   {logo ? (
-                    <img
-                      src={URL.createObjectURL(logo)}
-                      alt="logo"
-                      className="h-full object-contain"
-                    />
+                    <>
+                      <img
+                        src={URL.createObjectURL(logo)}
+                        alt="logo"
+                        className="h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setLogo(null);
+                        }}
+                        className="absolute top-[-10px] right-[-10px] bg-neutral-700/80 hover:bg-neutral-600/80 rounded-full p-1"
+                        title="Remove logo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
                   ) : (
                     <span className="text-neutral-500">Logo</span>
                   )}
@@ -91,7 +292,7 @@ export default function InvoiceForm() {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setLogo(e.target.files?.[0] || null)}
-                  className="text-sm text-neutral-400"
+                  className="inline-block text-sm text-neutral-400"
                 />
               </label>
               <div className="space-y-1 text-left">
@@ -102,6 +303,8 @@ export default function InvoiceForm() {
                   </span>
                   <input
                     type="text"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
                     className="w-full pl-6 pr-2 py-1.5 bg-neutral-900 text-center text-white border border-neutral-600 rounded-md focus:outline-none focus:ring-1 focus:ring-white"
                     placeholder="1"
                   />
@@ -164,7 +367,7 @@ export default function InvoiceForm() {
                   value={fromAddress}
                   onChange={(e) => setFromAddress(e.target.value)}
                   rows={2}
-                  className="w-full bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white"
+                  className="w-full text-sm bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white"
                 />
               </div>
               <div>
@@ -172,15 +375,16 @@ export default function InvoiceForm() {
                 <input
                   type="text"
                   value={toName}
+                  placeholder="Who is this to?"
                   onChange={(e) => setToName(e.target.value)}
-                  className="w-full bg-neutral-800 mb-2 px-3 py-2 rounded-md border border-neutral-700 text-white"
+                  className="w-full text-sm bg-neutral-800 mb-2 px-3 py-2 rounded-md border border-neutral-700 text-white"
                 />
                 <label className="mt-2 text-sm text-neutral-400">Address</label>
                 <textarea
                   value={toAddress}
                   onChange={(e) => setToAddress(e.target.value)}
                   rows={2}
-                  className="w-full bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white"
+                  className="w-full text-sm bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white"
                 />
               </div>
             </div>
@@ -201,19 +405,19 @@ export default function InvoiceForm() {
                   />
                   <input
                     type="number"
-                    value={it.qty}
+                    value={it.qty === 0 ? "" : it.qty}
                     onChange={(e) => updateItem(it.id, "qty", e.target.value)}
                     placeholder="Qty"
-                    className="w-20 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-right"
+                    className="w-20 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
                   />
                   <input
                     type="number"
-                    value={it.rate}
+                    value={it.rate === 0 ? "" : it.rate}
                     onChange={(e) => updateItem(it.id, "rate", e.target.value)}
                     placeholder="Rate"
-                    className="w-24 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-right"
+                    className="w-24 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
                   />
-                  <span className="w-24 text-right font-medium">
+                  <span className="w-24 py-2 text-center font-medium">
                     {currency}{" "}
                     {(it.qty * it.rate).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -231,7 +435,7 @@ export default function InvoiceForm() {
               ))}
               <button
                 onClick={addLine}
-                className="mt-2 text-green-500 font-semibold"
+                className="cursor-pointer mt-2 text-green-500 font-semibold"
               >
                 + Line Item
               </button>
@@ -274,9 +478,6 @@ export default function InvoiceForm() {
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
               </select>
-              <button className="text-sm text-white font-semibold">
-                Save Default
-              </button>
             </div>
 
             {/* Tax Toggle */}
@@ -425,9 +626,21 @@ export default function InvoiceForm() {
             </div>
 
             {/* Download */}
-            <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-200">
+            <button
+              onClick={handleDownloadClick}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-200"
+            >
               <Download className="w-5 h-5" />
               Download PDF
+            </button>
+
+            {/* Clear Draft Button */}
+            <button
+              onClick={clearDraft}
+              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-5 h-5" />
+              Clear Saved Draft
             </button>
           </div>
         </div>
