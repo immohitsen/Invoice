@@ -5,7 +5,7 @@ import React from 'react'
 
 export default function Dashboard() {
   return (
-    <div>
+    <div className='mb-25'>
       <InvoiceForm/>
     </div>
   )

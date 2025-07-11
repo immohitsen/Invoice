@@ -7,6 +7,7 @@ import {
   Document,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 
 interface InvoiceItem {
@@ -39,7 +40,7 @@ interface InvoiceData {
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
     padding: 30,
     fontSize: 11,
     lineHeight: 1.5,
@@ -105,6 +106,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#e5e7eb",
   },
+});
+
+Font.register({
+  family: "NotoSans",
+  fonts: [
+    { src: "/fonts/NotoSans-Regular.ttf", fontWeight: "normal" },
+    { src: "/fonts/NotoSans-Bold.ttf", fontWeight: "bold" },
+    { src: "/fonts/NotoSans-Italic.ttf", fontStyle: "italic" },
+    { src: "/fonts/NotoSans-BoldItalic.ttf", fontWeight: "bold", fontStyle: "italic" },
+  ],
 });
 
 const InvoicePDF = ({ data }: { data: InvoiceData }) => {

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { X, Download, Trash2 } from "lucide-react";
+import { X, Download, Trash2, Eye } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import InvoicePDF from "./ui/InvoicePDF";
 
@@ -160,8 +160,8 @@ export default function InvoiceForm() {
     logo,
   ]);
 
-  const handleDownloadClick = async () => {
-    // 1️⃣ Convert logo to base64 if present
+  // View PDF in new tab
+  const handleViewPDF = async () => {
     let logoBase64: string | null = null;
     if (logo) {
       logoBase64 = await new Promise<string>((resolve) => {
@@ -170,8 +170,6 @@ export default function InvoiceForm() {
         reader.onload = () => resolve(reader.result as string);
       });
     }
-
-    // 2️⃣ Assemble invoice data
     const invoiceData = {
       fromName,
       fromAddress,
@@ -193,11 +191,51 @@ export default function InvoiceForm() {
       notes,
       // terms is not used in InvoicePDF, so not passing it
     };
-
-    // 3️⃣ Generate PDF and open in new tab
     const blob = await pdf(<InvoicePDF data={invoiceData} />).toBlob();
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
+  };
+
+  // Download PDF directly
+  const handleDownloadPDF = async () => {
+    let logoBase64: string | null = null;
+    if (logo) {
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(logo);
+        reader.onload = () => resolve(reader.result as string);
+      });
+    }
+    const invoiceData = {
+      fromName,
+      fromAddress,
+      toName,
+      toAddress,
+      invoiceNumber,
+      date,
+      dueDate,
+      items,
+      subtotal,
+      taxValue,
+      discountAmt,
+      shippingFee,
+      total,
+      amountPaid,
+      balanceDue,
+      currency,
+      logo: logoBase64 || undefined,
+      notes,
+      // terms is not used in InvoicePDF, so not passing it
+    };
+    const blob = await pdf(<InvoicePDF data={invoiceData} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `invoice-${invoiceNumber}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Helpers
@@ -253,15 +291,15 @@ export default function InvoiceForm() {
   };
 
   return (
-    <div className="font-montserrat min-h-screen bg-neutral-950 p-6">
+    <div className="font-montserrat min-h-screen bg-neutral-950 p-2 sm:p-4 md:p-6">
       <div className="max-w-6xl mx-auto bg-neutral-900 rounded-2xl overflow-hidden shadow-lg">
-        <div className="grid lg:grid-cols-[2fr_1fr]">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr]">
           {/* LEFT */}
-          <div className="p-8 space-y-6">
+          <div className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6">
             {/* Logo & Invoice# */}
-            <div className="flex justify-between items-center">
-              <label className="cursor-pointer contain-inline-size items-center gap-2 relative">
-                <div className="h-48 w-48 bg-neutral-800 rounded-lg flex items-center justify-center overflow-hidden border border-gray-500 border-dashed">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
+              <label className="cursor-pointer contain-inline-size items-center gap-2 relative w-full sm:w-auto">
+                <div className="h-32 w-32 sm:h-48 sm:w-48 bg-neutral-800 rounded-lg flex items-center justify-center overflow-hidden border border-gray-500 border-dashed mx-auto sm:mx-0">
                   {logo ? (
                     <>
                       <img
@@ -293,9 +331,9 @@ export default function InvoiceForm() {
                   className="inline-block text-sm text-neutral-400"
                 />
               </label>
-              <div className="space-y-1 text-left">
+              <div className="space-y-1 text-left w-full sm:w-32">
                 <label className="text-sm mx-1 text-neutral-400">Invoice</label>
-                <div className="relative w-32">
+                <div className="relative w-full">
                   <span className="absolute inset-y-0 left-3 flex items-center text-neutral-400 pointer-events-none">
                     #
                   </span>
@@ -311,7 +349,7 @@ export default function InvoiceForm() {
             </div>
 
             {/* Dates & Terms */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { label: "Date", value: date, setter: setDate, type: "date" },
                 {
@@ -350,7 +388,7 @@ export default function InvoiceForm() {
             </div>
 
             {/* From & To */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-neutral-400">From (Name)</label>
                 <input
@@ -390,32 +428,30 @@ export default function InvoiceForm() {
             {/* Line Items */}
             <div className="space-y-2">
               <label className="text-sm text-neutral-400">Items</label>
-              {items.map((it) => (
-                <div key={it.id} className="flex gap-2 items-start">
+              {items.map((it, i) => (
+                <div key={it.id} className="flex flex-col sm:flex-row gap-2 items-start">
                   <input
                     type="text"
                     value={it.description}
-                    onChange={(e) =>
-                      updateItem(it.id, "description", e.target.value)
-                    }
+                    onChange={(e) => updateItem(it.id, "description", e.target.value)}
                     placeholder="Description..."
-                    className="flex-1 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white"
+                    className="flex-1 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white w-full"
                   />
                   <input
                     type="number"
                     value={it.qty === 0 ? "" : it.qty}
                     onChange={(e) => updateItem(it.id, "qty", e.target.value)}
                     placeholder="Qty"
-                    className="w-20 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
+                    className="w-full sm:w-20 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
                   />
                   <input
                     type="number"
                     value={it.rate === 0 ? "" : it.rate}
                     onChange={(e) => updateItem(it.id, "rate", e.target.value)}
                     placeholder="Rate"
-                    className="w-24 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
+                    className="w-full sm:w-24 bg-neutral-800 px-3 py-2 rounded-md border border-neutral-700 text-white text-center"
                   />
-                  <span className="w-24 py-2 text-center font-medium">
+                  <span className="w-full sm:w-24 py-2 text-center font-medium">
                     {currency}{" "}
                     {(it.qty * it.rate).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -433,7 +469,7 @@ export default function InvoiceForm() {
               ))}
               <button
                 onClick={addLine}
-                className="cursor-pointer mt-2 text-green-500 font-semibold"
+                className="cursor-pointer mt-2 text-green-500 font-semibold w-full sm:w-auto"
               >
                 + Line Item
               </button>
@@ -463,7 +499,7 @@ export default function InvoiceForm() {
           </div>
 
           {/* RIGHT */}
-          <div className="bg-neutral-800 p-6 border-l border-neutral-700 flex flex-col gap-6">
+          <div className="bg-neutral-800 p-4 sm:p-6 border-t lg:border-t-0 lg:border-l border-neutral-700 flex flex-col gap-4 md:gap-6">
             {/* Currency & Save */}
             <div className="space-y-2">
               <label className="text-sm text-neutral-400">Currency</label>
@@ -505,7 +541,7 @@ export default function InvoiceForm() {
                     type="number"
                     value={taxPercent}
                     onChange={(e) => setTaxPercent(Number(e.target.value))}
-                    className="w-20 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-right"
+                    className="w-20 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-center"
                   />
                 ) : (
                   <input
@@ -530,13 +566,13 @@ export default function InvoiceForm() {
                 label: "Discount %",
                 val: discount,
                 set: setDiscount,
-                width: "w-20",
+                width: "w-full sm:w-20",
               },
               {
                 label: "Shipping",
                 val: shippingFee,
                 set: setShippingFee,
-                width: "w-24",
+                width: "w-full sm:w-24",
               },
             ].map((fld) => (
               <div
@@ -548,7 +584,7 @@ export default function InvoiceForm() {
                   type="number"
                   value={fld.val}
                   onChange={(e) => fld.set(Number(e.target.value))}
-                  className={`${fld.width} bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-right`}
+                  className={`${fld.width} bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-center`}
                 />
               </div>
             ))}
@@ -608,7 +644,7 @@ export default function InvoiceForm() {
                     type="number"
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(Number(e.target.value))}
-                    className="w-24 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-right"
+                    className="w-24 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-700 text-white text-center"
                   />
                 </div>
               </div>
@@ -623,19 +659,28 @@ export default function InvoiceForm() {
               </div>
             </div>
 
-            {/* Download */}
-            <button
-              onClick={handleDownloadClick}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-200"
-            >
-              <Download className="w-5 h-5" />
-              Download PDF
-            </button>
+            {/* Download & View PDF Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <button
+                onClick={handleViewPDF}
+                className="cursor-pointer w-full text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-200"
+              >
+                <Eye className="w-5 h-5" />
+                View PDF
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="cursor-pointer w-full text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+              >
+                <Download className="w-5 h-5" />
+                Download PDF
+              </button>
+            </div>
 
             {/* Clear Draft Button */}
             <button
               onClick={clearDraft}
-              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors"
+              className="cursor-pointer w-full flex items-center justify-center gap-2 bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors"
             >
               <Trash2 className="w-5 h-5" />
               Clear Saved Draft

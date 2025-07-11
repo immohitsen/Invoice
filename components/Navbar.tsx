@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/resizable-navbar";
 import React from "react";
 import { useState } from "react";
+import { Github } from "lucide-react";
 
 export default function Navbar() {
   const navItems = [
@@ -34,7 +35,16 @@ export default function Navbar() {
           <NavbarLogo />
           <NavItems items={navItems} />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="primary">Book a call</NavbarButton>
+            <NavbarButton
+              href="https://github.com/immohitsen/Invoice "
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="dark"
+              className="flex items-center gap-2"
+            >
+              <Github className="w-5 h-5" />
+              GitHub
+            </NavbarButton>
           </div>
         </NavBody>
 
@@ -64,11 +74,15 @@ export default function Navbar() {
             ))}
             <div className="flex w-full flex-col gap-4">
               <NavbarButton
+                href="https://github.com/immohitsen/Invoice"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="dark"
+                className="w-full flex items-center gap-2"
                 onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
-                className="w-full"
               >
-                Book a call
+                  <Github className="w-5 h-5" />
+                GitHub
               </NavbarButton>
             </div>
           </MobileNavMenu>
